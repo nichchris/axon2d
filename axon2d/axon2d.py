@@ -56,11 +56,6 @@ def plot_circle(ax, pos, rads, box,filler=False, op_alpha=.8, clr="g",
         Array containing the radius for each neuron.
     op_alpha : float
         Opacity of spheres (default value is 0.6).
-    *args : 
-    **kwargs : 
-
-    Returns
-    -------
     """
     xs, ys = pos[:, 0], pos[:, 1]
 
@@ -83,6 +78,7 @@ def plot_circle(ax, pos, rads, box,filler=False, op_alpha=.8, clr="g",
 #       axon placem       #
 ###########################
 
+
 def new_pos(pos1, pos2, rmin, box, overlaps):
     """Function to get new position if there is overlap in all positions. If not
     all are overlapping, we assume they are in a different position.
@@ -100,6 +96,7 @@ def new_pos(pos1, pos2, rmin, box, overlaps):
           
     Returns:
     --------
+
     """
 
     if (abs(pos1 - pos2) < rmin).all() == True:
@@ -313,44 +310,31 @@ def sub_area(r, d):
     """
     area = r**2 * np.arccos(d / r) - d * np.sqrt(r**2 - d**2)
     return area
-
-#########################
-#       SET PATHS       #
-#########################
-
-# savepath  = Path.cwd() / 'analysis'
-
-# if not savepath.exists():
-#     savepath.mkdir()        # same effect as exist_ok = True
-
-# tic = time.time()           # Simple timer
-
-#########################
-#       SET TIMER       #
-#########################
-
-tic = time.time()           # Simple timer
-
-start_time = time.localtime()
-current_time = time.strftime("%H:%M:%S", start_time)
-print(current_time)
-
-
+    
 
 #########################
 #      RUN GROWTH       #
 #########################
 
-# def grow_network(w):
+
+def grow_network(w=None, 
+                 neurons=100, 
+                 x_dim=1.0,
+                 y_dim=1.0,
+                 res_steps=24*60,
+                 days=10,
+                 min_rad=12e-3,
+
+                 ):
 
 
-dims = 2
-x_dim = 1.0
-y_dim = 1.0
+    tic = time.time()           # Simple timer
 
-neurons = 100
+    start_time = time.localtime()
+    current_time = time.strftime("%H:%M:%S", start_time)
+    print(current_time)
+    min_rad = 12e-3
 
-min_rad = 12e-3
 # max_init_rad = 20e-2
 
 u_min = 0.0
