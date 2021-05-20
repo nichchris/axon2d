@@ -335,187 +335,187 @@ def grow_network(w=None,
     print(current_time)
     min_rad = 12e-3
 
-# max_init_rad = 20e-2
+    # max_init_rad = 20e-2
 
-u_min = 0.0
-u_max = 1.0
+    u_min = 0.0
+    u_max = 1.0
 
-res_steps = 24*60
-days = 10
-steps = days*res_steps
-dt = 5.0/res_steps
-# u = np.ones(neurons) * .2
-u_n = np.zeros(neurons)
+    res_steps = 24*60
+    days = 10
+    steps = days*res_steps
+    dt = 5.0/res_steps
+    # u = np.ones(neurons) * .2
+    u_n = np.zeros(neurons)
 
-s = 1.0
+    s = 1.0
 
-if 'f_name' not in locals():
-    f_name = str(neurons) 
-savepath  = Path.cwd() / ('results_' + f_name)
+    if 'f_name' not in locals():
+        f_name = str(neurons) 
+    savepath  = Path.cwd() / ('results_' + f_name)
 
-if not savepath.exists():
-    savepath.mkdir()        # same effect as exist_ok = True
+    if not savepath.exists():
+        savepath.mkdir()        # same effect as exist_ok = True
 
-# Box dimentions
-box_dims = np.array([x_dim, y_dim])
-# intiate random positions
-n_pos = np.random.uniform(0.0, 1.0, (neurons, dims))
+    # Box dimentions
+    box_dims = np.array([x_dim, y_dim])
+    # intiate random positions
+    n_pos = np.random.uniform(0.0, 1.0, (neurons, dims))
 
-# initiate random neuron growth size
-n_rad = np.ones(neurons) * min_rad  #np.random.rand(neurons)*max_init_rad
-# n_rad[n_rad < min_rad] = min_rad
-
-
-fig_init0 = plt.figure(figsize=(9, 8))
-ax_init0 = fig_init0.add_subplot(111)
-
-ax_init0.set_ylabel('y')
-ax_init0.set_xlabel('x')
-
-save_fig_init0 = savepath / 'fig_init0.png'
-plot_circle(ax_init0, n_pos, n_rad, box_dims)
-fig_init0.savefig(save_fig_init0)  #, dpi =600)
+    # initiate random neuron growth size
+    n_rad = np.ones(neurons) * min_rad  #np.random.rand(neurons)*max_init_rad
+    # n_rad[n_rad < min_rad] = min_rad
 
 
-n_pos = cell_overlap(n_pos, min_rad, box_dims, trs = 10e100)
+    fig_init0 = plt.figure(figsize=(9, 8))
+    ax_init0 = fig_init0.add_subplot(111)
 
-print('Neurons placed!')
+    ax_init0.set_ylabel('y')
+    ax_init0.set_xlabel('x')
 
-
-######################################
-#       SAVE INITIAL POSITIONS       #
-######################################
-
-fig_init = plt.figure(figsize=(9, 8))
-ax_init = fig_init.add_subplot(111)
-
-ax_init.set_ylabel('y')
-ax_init.set_xlabel('x')
-
-save_fig_init = savepath / 'fig_init.png'
-plot_circle(ax_init, n_pos, n_rad, box_dims)
-fig_init.savefig(save_fig_init)  #, dpi =600)
+    save_fig_init0 = savepath / 'fig_init0.png'
+    plot_circle(ax_init0, n_pos, n_rad, box_dims)
+    fig_init0.savefig(save_fig_init0)  #, dpi =600)
 
 
-# initiate neurons membrane potential
+    n_pos = cell_overlap(n_pos, min_rad, box_dims, trs = 10e100)
 
-ov_ar = overlap2D(n_pos, n_rad)
-w = s * ov_ar
+    print('Neurons placed!')
 
-area = np.zeros(steps)
-k = np.zeros(steps)
-r = np.zeros(steps)
-u_av = np.zeros(steps)
 
-for i in range(steps):
-    if (i+1)%res_steps == 0:
-        print('Arrived at day:', (i+1)/res_steps)
+    ######################################
+    #       SAVE INITIAL POSITIONS       #
+    ######################################
 
-    # grow neurons to stable size
+    fig_init = plt.figure(figsize=(9, 8))
+    ax_init = fig_init.add_subplot(111)
+
+    ax_init.set_ylabel('y')
+    ax_init.set_xlabel('x')
+
+    save_fig_init = savepath / 'fig_init.png'
+    plot_circle(ax_init, n_pos, n_rad, box_dims)
+    fig_init.savefig(save_fig_init)  #, dpi =600)
+
+
+    # initiate neurons membrane potential
+
     ov_ar = overlap2D(n_pos, n_rad)
     w = s * ov_ar
 
-    activity = w * firing_rate(u_n)
+    area = np.zeros(steps)
+    k = np.zeros(steps)
+    r = np.zeros(steps)
+    u_av = np.zeros(steps)
 
-    du_n = (- u_n/np.exp(1) + (1- u_n) * activity.sum(axis=1))
-    # if activity.any() > 0.6 * s:
-    #     print(du_n)
+    for i in range(steps):
+        if (i+1)%res_steps == 0:
+            print('Arrived at day:', (i+1)/res_steps)
 
-    u_n = u_n + du_n
+        # grow neurons to stable size
+        ov_ar = overlap2D(n_pos, n_rad)
+        w = s * ov_ar
 
-    n_rad  = radius_growth(n_rad, u_n, dt)
-    n_rad[n_rad < min_rad] = min_rad
-    u_n[u_n < u_min] = u_min
-    u_n[u_n > u_max] = u_max
+        activity = w * firing_rate(u_n)
 
-    area[i] = np.mean(disk_area(n_rad))
+        du_n = (- u_n/np.exp(1) + (1- u_n) * activity.sum(axis=1))
+        # if activity.any() > 0.6 * s:
+        #     print(du_n)
 
-    k[i] = np.count_nonzero(w) / neurons #w.size
-    r[i] = np.mean(n_rad)
-    u_av[i] = np.mean(u_n)
-#     #spiking
+        u_n = u_n + du_n
 
+        n_rad  = radius_growth(n_rad, u_n, dt)
+        n_rad[n_rad < min_rad] = min_rad
+        u_n[u_n < u_min] = u_min
+        u_n[u_n > u_max] = u_max
 
-#########################
-#       PLOTTING        #
-#########################
+        area[i] = np.mean(disk_area(n_rad))
 
-fig_1 = plt.figure(figsize=(9, 8))
-ax_1 = fig_1.add_subplot(111)
-
-ax_1.set_ylabel('y')
-ax_1.set_xlabel('x')
-
-save_fig_1 = savepath / 'fig_1.png'
-plot_circle(ax_1, n_pos, n_rad, box_dims)
-fig_1.savefig(save_fig_1)  #, dpi =600)
-
-# plt.show()
-
-x_val = np.linspace(1, steps, steps)
-
-fig_area = plt.figure(figsize=(10, 8))
-ax_area = fig_area.add_subplot(111)
-
-ax_area.plot(x_val, area)
-
-ax_area.set_ylabel('Average area')
-ax_area.set_xlabel('Step')
-
-save_fig_area = savepath / 'fig_area.png'
-fig_area.savefig(save_fig_area)
-
-fig_k = plt.figure(figsize=(10, 8))
-ax_k = fig_k.add_subplot(111)
-
-ax_k.plot(x_val, k)
-
-ax_k.set_ylabel('Average number of connections per neuron')
-ax_k.set_xlabel('Step')
-
-save_fig_k = savepath / 'fig_k.png'
-fig_k.savefig(save_fig_k)
-
-fig_r = plt.figure(figsize=(10, 8))
-ax_r = fig_r.add_subplot(111)
-
-ax_r.plot(x_val, r)
-
-ax_r.set_ylabel('Average radius')
-ax_r.set_xlabel('Step')
-
-save_fig_r = savepath / 'fig_r.png'
-fig_r.savefig(save_fig_r)
-
-fig_saturation = plt.figure(figsize=(10, 8))
-ax_saturation = fig_saturation.add_subplot(111)
-
-ax_saturation.plot(x_val, u_av)
-
-ax_saturation.set_ylabel('Average saturation')
-ax_saturation.set_xlabel('Step')
-
-save_fig_saturation = savepath / 'fig_saturation.png'
-fig_saturation.savefig(save_fig_saturation)
-
-# Save variables
-
-# save_w = savepath / 'w.mat'
-# savemat(save_w, mdict={'w': w})
-
-save_var = savepath / 'weight.txt'
-#outdated. Use numpy write txt
-for i in range(neurons):
-    with open(save_var, 'a', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(w[i])
-# np.savetxt('corr.txt', corr, delimiter=' ')
-end_time = time.localtime()
-current_time = time.strftime("%H:%M:%S", end_time)
-print(current_time)
-toc = time.time() - tic
-print("Elapsed time is: ", toc)
-print("Elapsed time is ", np.floor(toc/60), ' minutes and ', toc % 60, 'seconds.')
+        k[i] = np.count_nonzero(w) / neurons #w.size
+        r[i] = np.mean(n_rad)
+        u_av[i] = np.mean(u_n)
+    #     #spiking
 
 
+    #########################
+    #       PLOTTING        #
+    #########################
+
+    fig_1 = plt.figure(figsize=(9, 8))
+    ax_1 = fig_1.add_subplot(111)
+
+    ax_1.set_ylabel('y')
+    ax_1.set_xlabel('x')
+
+    save_fig_1 = savepath / 'fig_1.png'
+    plot_circle(ax_1, n_pos, n_rad, box_dims)
+    fig_1.savefig(save_fig_1)  #, dpi =600)
+
+    # plt.show()
+
+    x_val = np.linspace(1, steps, steps)
+
+    fig_area = plt.figure(figsize=(10, 8))
+    ax_area = fig_area.add_subplot(111)
+
+    ax_area.plot(x_val, area)
+
+    ax_area.set_ylabel('Average area')
+    ax_area.set_xlabel('Step')
+
+    save_fig_area = savepath / 'fig_area.png'
+    fig_area.savefig(save_fig_area)
+
+    fig_k = plt.figure(figsize=(10, 8))
+    ax_k = fig_k.add_subplot(111)
+
+    ax_k.plot(x_val, k)
+
+    ax_k.set_ylabel('Average number of connections per neuron')
+    ax_k.set_xlabel('Step')
+
+    save_fig_k = savepath / 'fig_k.png'
+    fig_k.savefig(save_fig_k)
+
+    fig_r = plt.figure(figsize=(10, 8))
+    ax_r = fig_r.add_subplot(111)
+
+    ax_r.plot(x_val, r)
+
+    ax_r.set_ylabel('Average radius')
+    ax_r.set_xlabel('Step')
+
+    save_fig_r = savepath / 'fig_r.png'
+    fig_r.savefig(save_fig_r)
+
+    fig_saturation = plt.figure(figsize=(10, 8))
+    ax_saturation = fig_saturation.add_subplot(111)
+
+    ax_saturation.plot(x_val, u_av)
+
+    ax_saturation.set_ylabel('Average saturation')
+    ax_saturation.set_xlabel('Step')
+
+    save_fig_saturation = savepath / 'fig_saturation.png'
+    fig_saturation.savefig(save_fig_saturation)
+
+    # Save variables
+
+    # save_w = savepath / 'w.mat'
+    # savemat(save_w, mdict={'w': w})
+
+    save_var = savepath / 'weight.txt'
+    #outdated. Use numpy write txt
+    for i in range(neurons):
+        with open(save_var, 'a', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(w[i])
+    # np.savetxt('corr.txt', corr, delimiter=' ')
+    end_time = time.localtime()
+    current_time = time.strftime("%H:%M:%S", end_time)
+    print(current_time)
+    toc = time.time() - tic
+    print("Elapsed time is: ", toc)
+    print("Elapsed time is ", np.floor(toc/60), ' minutes and ', toc % 60, 'seconds.')
+
+    return w
 # plt.show()
