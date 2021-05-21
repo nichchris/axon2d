@@ -367,10 +367,8 @@ def grow_network(n_pos=None,
         print('Neurons placed!')
 
     steps = days*res_steps
-    dt = 5.0/res_steps
+    dt = 1.0/res_steps
     u_n = np.zeros(neurons)
-
-    print(kwargs)
 
     if 'r_path' not in kwargs:
         r_path = 'results_' + str(neurons)
