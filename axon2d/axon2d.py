@@ -140,8 +140,7 @@ def radius_growth(radius,
                   rho=4e-3,
                   epsil=0.6,
                   beta=0.1,
-                  theta=0.5,
-                  alpha=0.12):
+                  ):
     """ Calculate the change in radius as a function of growth multiplied by
     the time step resolution.
     Parameters
@@ -155,8 +154,6 @@ def radius_growth(radius,
     rho : float
     epsil : 
     beta : 
-    theta : firing threshold
-    alpha : steepness of function
 
     Returns
     -------
@@ -324,7 +321,7 @@ def grow_network(n_pos=None,
                  res_steps=24*60,
                  days=50,
                  min_rad=12e-3,
-                 s=1.0,
+                 s=0.1,
                  u_min=0.0,
                  u_max=1.0,
                  *args,
@@ -336,7 +333,8 @@ def grow_network(n_pos=None,
     Parameters
     ----------
     n_pos : ndarray 
-        Position of neurons (default value is None).
+        Position of neurons (default value is None). Should be mm,if not scale
+        using x_dims and y_dims
     x_dim : float
         Scaling factor for magnification or dimension of box.
     y_dim : float
@@ -356,9 +354,11 @@ def grow_network(n_pos=None,
 
     # Place neurons
     if isinstance(n_pos, np.ndarray):
+        n_pos[:, 0] = n_pos[:, 0]/x_dim
+        n_pos[:, 1] = n_pos[:, 1]/y_dim
         neurons = n_pos.shape[0]
         x_max, y_max = n_pos.max(axis=0)
-        box_dims = np.array([x_max/x_dim, y_max/y_dim])
+        box_dims = np.array([x_max, y_max])
         print('Neuron placement based on input!')
     else:
         box_dims = np.array([x_dim, y_dim])
@@ -381,10 +381,6 @@ def grow_network(n_pos=None,
     if not savepath.exists():
         savepath.mkdir()        # same effect as exist_ok = True
 
-    # Box dimentions
-    box_dims = np.array([x_dim, y_dim])
-
-
     # initiate random neuron growth size
     n_rad = np.ones(neurons) * min_rad  #np.random.rand(neurons)*max_init_rad
     # n_rad[n_rad < min_rad] = min_rad
@@ -398,7 +394,6 @@ def grow_network(n_pos=None,
     save_fig_init = savepath / 'fig_init.png'
     plot_circle(ax_init, n_pos, n_rad, box_dims)
     fig_init.savefig(save_fig_init)  #, dpi =600)
-
 
     # initiate neurons membrane potential
 
