@@ -131,3 +131,4 @@ dmypy.json
 # Savfolder and stuff
 results*
 analysis*
+*.csv
