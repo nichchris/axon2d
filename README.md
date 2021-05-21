@@ -1,7 +1,8 @@
 # axon2d
 
-Install:
-from root (axon2d)
+### Install
+From root (axon2d) run :
+
 pip install .
 
 ## References
