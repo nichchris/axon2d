@@ -317,74 +317,77 @@ def sub_area(r, d):
 #########################
 
 
-def grow_network(w=None, 
-                 neurons=100, 
+def grow_network(n_pos=None, 
+                 neurons=10, 
                  x_dim=1.0,
                  y_dim=1.0,
                  res_steps=24*60,
-                 days=10,
+                 days=50,
                  min_rad=12e-3,
-
+                 s=1.0,
+                 u_min=0.0,
+                 u_max=1.0,
+                 *args,
+                 **kwargs
                  ):
 
+    """Run axon growth simulation in two dimentions.
+    
+    Parameters
+    ----------
+    n_pos : ndarray 
+        Position of neurons (default value is None).
+    x_dim : float
+        Scaling factor for magnification or dimension of box.
+    y_dim : float
+        Scaling factor for magnification or dimension of box.
+    
+    Returns
+    -------
+    w : ndarray
+        Weights of netwokr after growth, delimiter is ','.
+    """
 
     tic = time.time()           # Simple timer
 
     start_time = time.localtime()
     current_time = time.strftime("%H:%M:%S", start_time)
     print(current_time)
-    min_rad = 12e-3
 
-    # max_init_rad = 20e-2
+    # Place neurons
+    if isinstance(n_pos, np.ndarray):
+        neurons = n_pos.shape[0]
+        x_max, y_max = n_pos.max(axis=0)
+        box_dims = np.array([x_max/x_dim, y_max/y_dim])
+        print('Neuron placement based on input!')
+    else:
+        box_dims = np.array([x_dim, y_dim])
+        n_pos = np.random.uniform(0.0, 1.0, (neurons, 2))
+        n_pos = cell_overlap(n_pos, min_rad, box_dims, trs = 10e100)
+        print('Neurons placed!')
 
-    u_min = 0.0
-    u_max = 1.0
-
-    res_steps = 24*60
-    days = 10
     steps = days*res_steps
     dt = 5.0/res_steps
-    # u = np.ones(neurons) * .2
     u_n = np.zeros(neurons)
 
-    s = 1.0
+    print(kwargs)
 
-    if 'f_name' not in locals():
-        f_name = str(neurons) 
-    savepath  = Path.cwd() / ('results_' + f_name)
+    if 'r_path' not in kwargs:
+        r_path = 'results_' + str(neurons)
+    else:
+        r_path = kwargs['r_path'] 
 
+    savepath  = Path.cwd() / (r_path)
     if not savepath.exists():
         savepath.mkdir()        # same effect as exist_ok = True
 
     # Box dimentions
     box_dims = np.array([x_dim, y_dim])
-    # intiate random positions
-    n_pos = np.random.uniform(0.0, 1.0, (neurons, dims))
+
 
     # initiate random neuron growth size
     n_rad = np.ones(neurons) * min_rad  #np.random.rand(neurons)*max_init_rad
     # n_rad[n_rad < min_rad] = min_rad
-
-
-    fig_init0 = plt.figure(figsize=(9, 8))
-    ax_init0 = fig_init0.add_subplot(111)
-
-    ax_init0.set_ylabel('y')
-    ax_init0.set_xlabel('x')
-
-    save_fig_init0 = savepath / 'fig_init0.png'
-    plot_circle(ax_init0, n_pos, n_rad, box_dims)
-    fig_init0.savefig(save_fig_init0)  #, dpi =600)
-
-
-    n_pos = cell_overlap(n_pos, min_rad, box_dims, trs = 10e100)
-
-    print('Neurons placed!')
-
-
-    ######################################
-    #       SAVE INITIAL POSITIONS       #
-    ######################################
 
     fig_init = plt.figure(figsize=(9, 8))
     ax_init = fig_init.add_subplot(111)
@@ -498,18 +501,10 @@ def grow_network(w=None,
     save_fig_saturation = savepath / 'fig_saturation.png'
     fig_saturation.savefig(save_fig_saturation)
 
-    # Save variables
-
-    # save_w = savepath / 'w.mat'
-    # savemat(save_w, mdict={'w': w})
-
     save_var = savepath / 'weight.txt'
     #outdated. Use numpy write txt
-    for i in range(neurons):
-        with open(save_var, 'a', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(w[i])
-    # np.savetxt('corr.txt', corr, delimiter=' ')
+    np.savetxt(save_var, w, delimiter=',')
+
     end_time = time.localtime()
     current_time = time.strftime("%H:%M:%S", end_time)
     print(current_time)
@@ -518,4 +513,3 @@ def grow_network(w=None,
     print("Elapsed time is ", np.floor(toc/60), ' minutes and ', toc % 60, 'seconds.')
 
     return w
-# plt.show()
